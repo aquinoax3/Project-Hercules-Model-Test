@@ -1,17 +1,14 @@
 import mongoose  from "mongoose";
 
 const WorkoutSchema = new mongoose.Schema({
-    WorkoutId: {
-        type: ObjectId
-    },
-    Name: {
+    Type: {
         type: String
     },
-    Rep: {
+    Level: {
         type: Number
     },
-    Set: {
-        type: Number
+    Exercises: {
+        type: Array
     }
 })
 
