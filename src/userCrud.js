@@ -5,7 +5,7 @@ export async function connectToCluster(uri) {
 
     try {
         mongoClient = new MongoClient(uri);
-        console.log("Connectiont to MongoDb Atlas cluster");
+        console.log("Connecting to MongoDb Atlas cluster");
         await mongoClient.connect();
         console.log("Successfully connected to MongoDB Atlas")
 
