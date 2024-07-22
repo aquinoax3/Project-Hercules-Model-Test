@@ -1,5 +1,5 @@
-import express from "express";
-import UserModel from "../models/User.js";
+const express = require("express")
+const UserModel = require("../models/User.js")
 
 const router = express.Router();
 
@@ -10,6 +10,19 @@ router.get("/users", async (req, res) => {
     } catch (error) {
         res.status(500).send({ error })
     }
+})
+
+router.get("/users/:id", async (req, res) => {
+    try {
+        const id = req.params.id
+        const user = await UserModel.findOne({
+            Of_Id: id
+        })
+        res.send(user);
+    } catch (error) {
+        res.status(404).send(error)
+    }
+
 })
 
 router.post("/users", async (req, res) => {
@@ -25,4 +38,4 @@ router.post("/users", async (req, res) => {
 })
 
 
-export default router
+module.exports = router

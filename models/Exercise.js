@@ -1,4 +1,4 @@
-import mongoose  from "mongoose";
+const mongoose = require("mongoose");
 
 const ExerciseSchema = new mongoose.Schema({
     Name: {
@@ -16,4 +16,4 @@ const ExerciseSchema = new mongoose.Schema({
 
 const ExerciseModel = mongoose.model("Exercise", ExerciseSchema);
 
-export default ExerciseModel;
+module.exports =  ExerciseModel;
