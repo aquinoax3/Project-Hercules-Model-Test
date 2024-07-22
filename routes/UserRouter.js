@@ -16,7 +16,8 @@ router.post("/users", async (req, res) => {
     const user = new UserModel(req.body);
 
     try {
-        await user.save();
+        console.log("Received data", req.body)
+        await user.save({ new: true });
         res.send(user);
     } catch (error) {
         res.status(500).send(error);
