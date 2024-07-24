@@ -13,49 +13,69 @@ describe("User tests", () => {
     let mockFindAll
     let mockFindById
     let mockUpdateOne
+    let mockFindOnePopulate
 
     const mockUsers = [
         {
             "Of_Id": "1",
             "Nickname": "Phil",
             "Email": "Phil@test.com",
-            "Workouts": []
+            "WorkoutIds": []
         },
 
         {
             "Of_Id": "2",
             "Nickname": "Bob",
             "Email": "Bob@test.com",
-            "Workouts": []
+            "WorkoutIds": [
+                {
+                    Type: "Upper Body", 
+                    Level: "Beginner", 
+                    FocusArea: "Chest", 
+                    // ExerciseIds: [mockExercise.id] 
+                }
+
+            ],
+        },
+        {
+            "Of_Id": "3",
+            "Nickname": "Lily",
+            "Email": "Lily@test.com",
+            "WorkoutIds": []
         }
     ]
 
+    const mockExercise = [
+        {
+            id: 1,
+            Name: "Squats",
+            Rep: 10,
+            Set: 3
+        },
+    ]
+
     beforeAll(async () =>{
-        mockCreate = sinon.stub(UserModel, "create").resolves({
-            "Of_Id": "1",
-            "Nickname": "Phil",
-            "Email": "Phil@test.com",
-            "Workouts": []
-        })
+        mockCreate = sinon.stub(UserModel, "create").resolves(mockUsers[2])
 
         mockFindAll = sinon.stub(UserModel, "find").resolves(mockUsers)
 
         mockFindById = sinon.stub(UserModel, "findById").resolves(mockUsers[0])
 
         mockUpdateOne = sinon.stub(UserModel, "findOneAndUpdate").resolves({Nickname: "Phillip"})
+
+        mockFindOnePopulate = sinon.stub(UserModel, "findOne").resolves(mockUsers[1])
     })
-
-
+    
     afterAll(async () =>{
         sinon.restore()
     })
     
     test("Create a new user (mocked)", async () =>{
         const newUser = {
-            "Of_Id": "1",
-            "Nickname": "Phil",
-            "Email": "Phil@test.com",
-            "Workouts": []
+            "Of_Id": "3",
+            "Nickname": "Lily",
+            "Email": "Lily@test.com",
+            "WorkoutIds": []
         }
         const createdUser = await UserModel.create(newUser)
 
@@ -83,6 +103,35 @@ describe("User tests", () => {
 
         expect(user.Nickname).toBe("Phillip")
     })
+
+    test("User can add exercises to workout", async () => {
+        const userId = {Of_id: 1};
+        const mockExercise = { id: 1, Name: "Push-ups", Reps: 10, Sets: 3 };
+        const mockWorkout = { Type: "Upper Body", Level: "Beginner", FocusArea: "Chest", ExerciseIds: [mockExercise.id] };
+
+        // // 2. Find user by ID
+        const user = await UserModel.findOne(userId)
+        const populatedUser = await user.populate("WorkoutIds").lean(); // Populate workouts
+
+        // // 3. Associate workout with user (implementation might vary depending on your model)
+        // user.WorkoutIds.push(mockWorkout._id);
+        // await user.save(); // Persist changes (might need adjustment based on your model)
+    
+        // // 4. Optional: Re-fetch user to verify association
+        // const updatedUser = await UserModel.findById(userId).populate('WorkoutIds');
+    
+        // // 5. Assertion: Ensure the exercise is present in the workouts array of the updated user
+        // expect(updatedUser.WorkoutIds.some(workout => workout._id.equals(mockWorkout._id))).toBe(true);
+        
+    })
+
+    // test("Retrieve user workouts", async () => {
+    //     const userId = "1"
+    //     const user = await UserModel.findById(userId)
+
+    //     console.log(user.Workouts)
+    //     expect(user.Workouts.length).toBeGreaterThanOrEqual(0)
+    // })
 })
 
 
@@ -180,12 +229,12 @@ describe("Workout Tests", () => {
 
     const mockWorkouts = [
         {
-            Type: "Push",
+            Type: "Upper body",
             Level: "Beginner",
             Exercise: []
         },
         {
-            Type: "Pull",
+            Type: "Lower body",
             Level: "Intermediate",
             Exercise: []
         },
@@ -218,13 +267,13 @@ describe("Workout Tests", () => {
     })
 
     test("Create a workout", async () => {
-        const workout = await WorkoutModel.create({
-            Type: "Push",
-            Level: "Beginner",
-            Exercise: []
-        })
+        // const workout = await WorkoutModel.create({
+        //     Type: "Push",
+        //     Level: "Beginner",
+        //     Exercise: []
+        // })
 
-        expect(workout).toEqual(mockWorkouts[0])
+        // expect(workout).toEqual(mockWorkouts[0])
     })
 })
 

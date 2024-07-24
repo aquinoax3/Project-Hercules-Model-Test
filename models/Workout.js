@@ -5,11 +5,15 @@ const WorkoutSchema = new mongoose.Schema({
         type: String
     },
     Level: {
-        type: Number
+        type: String
     },
-    Exercises: {
-        type: Array
-    }
+    Focus_Area:{
+        type: String
+    },
+    ExerciseIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Exercise" // Reference the Exercise model name
+    }]
 })
 
 

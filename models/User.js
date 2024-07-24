@@ -13,7 +13,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    Workouts: []
+    WorkoutIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Workout" // Reference the Workout model name
+    }]
 })
 
 
