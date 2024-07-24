@@ -63,7 +63,7 @@ describe("User tests", () => {
 
         mockUpdateOne = sinon.stub(UserModel, "findOneAndUpdate").resolves({Nickname: "Phillip"})
 
-        mockFindOnePopulate = sinon.stub(UserModel, "findOne").populate("WorkoutIds").resolves(mockUsers[1])
+        mockFindOnePopulate = sinon.stub(UserModel, "findOne").resolves(mockUsers[1])
     })
     
     afterAll(async () =>{
@@ -113,9 +113,6 @@ describe("User tests", () => {
         const user = await UserModel.findOne(userId)
         const populatedUser = await user.populate("WorkoutIds").lean(); // Populate workouts
 
-
-        console.log(populatedUser)
-    
         // // 3. Associate workout with user (implementation might vary depending on your model)
         // user.WorkoutIds.push(mockWorkout._id);
         // await user.save(); // Persist changes (might need adjustment based on your model)
