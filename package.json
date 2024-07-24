@@ -8,16 +8,21 @@
   "description": "Test repo to work on Model creation.",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node app.js",
-    "test": "jest"
+    "test": "jest --watchAll"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.24.9",
+    "@babel/preset-env": "^7.24.8",
+    "@shelf/jest-mongodb": "^4.3.2",
+    "babel": "^6.23.0",
     "jest": "^29.7.0",
-    "nodemon": "^3.1.4"
+    "mongoose": "^8.5.1",
+    "sinon": "^7.5.0",
+    "sinon-mongoose": "^2.3.0"
   }
 }

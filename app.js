@@ -1,15 +1,21 @@
-import express from 'express';
+const express = require('express')
+const db = require("./db/connection.js")
+const UserRouter = require("./routes/UserRouter.js")
 
-// Initialize Express app
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true }));
+app.use("/api", UserRouter);
 
 // Routes
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
 
-// Start the server
+db;
+
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
