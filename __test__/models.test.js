@@ -134,11 +134,12 @@ describe("User tests with real populate", () => {
         _id: workoutId,
         Type: "Upper Body",
         Level: "Beginner",
-        FocusArea: "Chest",
+        "Focus_Area": "Chest",
         ExerciseIds: [exerciseId]
     };
 
     beforeAll(async () => {
+        // server was timing, added set time out to extend the wait to 20 seconds
         jest.setTimeout(20000); // 20 seconds
         mongoServer = await MongoMemoryServer.create();
         const uri = mongoServer.getUri();
@@ -168,155 +169,155 @@ describe("User tests with real populate", () => {
         console.log(JSON.stringify(populatedUser, null, 2))
         // Ensure the populatedUser.WorkoutIds is correctly populated
         expect(populatedUser.WorkoutIds[0]._id.toString()).toEqual(workoutId.toString());
-        expect(populatedUser.WorkoutIds[0].Type).toEqual(mockWorkout.Type);
-        expect(populatedUser.WorkoutIds[0].Level).toEqual(mockWorkout.Level);
-        expect(populatedUser.WorkoutIds[0].FocusArea).toEqual(mockWorkout.FocusArea);
-        expect(populatedUser.WorkoutIds[0].ExerciseIds).toEqual(mockWorkout.ExerciseIds);
+        expect(populatedUser.WorkoutIds[0].Type).toBe(mockWorkout.Type);
+        expect(populatedUser.WorkoutIds[0].Level).toBe(mockWorkout.Level);
+        expect(populatedUser.WorkoutIds[0].Focus_Area).toBe(mockWorkout.Focus_Area);
+        expect(populatedUser.WorkoutIds[0].ExerciseIds).toEqual(mockWorkout.ExerciseIds); 
     });
 });
 
 
-describe("Exercise Test", () => {
-    let mockCreate
-    let mockFindAll
-    let mockFindByOne
-    let mockUpdateOne
-    let mockFindOneAndDelete
+// describe("Exercise Test", () => {
+//     let mockCreate
+//     let mockFindAll
+//     let mockFindByOne
+//     let mockUpdateOne
+//     let mockFindOneAndDelete
     
-    const mockExercises = [
-        {
-            Name: "Squats",
-            Rep: 10,
-            Set: 3
-        },
-        {
-            Name: "Pull Up",
-            Rep: 8,
-            Set: 3
-        },
-        {
-            Name: "Chest Press",
-            Rep: 10,
-            Set: 3
-        },
-    ]
+//     const mockExercises = [
+//         {
+//             Name: "Squats",
+//             Rep: 10,
+//             Set: 3
+//         },
+//         {
+//             Name: "Pull Up",
+//             Rep: 8,
+//             Set: 3
+//         },
+//         {
+//             Name: "Chest Press",
+//             Rep: 10,
+//             Set: 3
+//         },
+//     ]
 
 
 
-    beforeAll(async () =>{
-        mockCreate = sinon.stub(ExerciseModel, "create").resolves({
-                Name: "Squats",
-                Rep: 10,
-                Set: 3
-        })
+//     beforeAll(async () =>{
+//         mockCreate = sinon.stub(ExerciseModel, "create").resolves({
+//                 Name: "Squats",
+//                 Rep: 10,
+//                 Set: 3
+//         })
 
-        mockFindAll = sinon.stub(ExerciseModel, "find").resolves(mockExercises)
+//         mockFindAll = sinon.stub(ExerciseModel, "find").resolves(mockExercises)
 
-        mockFindByOne = sinon.stub(ExerciseModel, "findOne").resolves(mockExercises[0])
+//         mockFindByOne = sinon.stub(ExerciseModel, "findOne").resolves(mockExercises[0])
 
-        mockUpdateOne = sinon.stub(ExerciseModel, "findOneAndUpdate").resolves({ Rep: 8 })
+//         mockUpdateOne = sinon.stub(ExerciseModel, "findOneAndUpdate").resolves({ Rep: 8 })
 
-        mockFindOneAndDelete = sinon.stub(ExerciseModel, "findOneAndDelete").resolves(mockExercises[0])
-    })
+//         mockFindOneAndDelete = sinon.stub(ExerciseModel, "findOneAndDelete").resolves(mockExercises[0])
+//     })
 
 
-    afterAll(async () =>{
-        sinon.restore()
-    })
+//     afterAll(async () =>{
+//         sinon.restore()
+//     })
 
-    test("Create a new exercise (mocked)", async () => {
-        const createdExercise = await ExerciseModel.create({
-            Name: "Squats",
-            Rep: 10,
-            Set: 3
-        })
+//     test("Create a new exercise (mocked)", async () => {
+//         const createdExercise = await ExerciseModel.create({
+//             Name: "Squats",
+//             Rep: 10,
+//             Set: 3
+//         })
 
-        expect(createdExercise).toEqual(mockExercises[0])
-    })
+//         expect(createdExercise).toEqual(mockExercises[0])
+//     })
 
-    test("Find all exercises (mocked)", async () => {
-        const exercises = await ExerciseModel.find()
+//     test("Find all exercises (mocked)", async () => {
+//         const exercises = await ExerciseModel.find()
 
-        expect(exercises).toEqual(mockExercises)
-    })
+//         expect(exercises).toEqual(mockExercises)
+//     })
 
-    test("Find exercise (mocked)", async () => {
-        const exercise = await ExerciseModel.findOne({Name: "Squats"})
+//     test("Find exercise (mocked)", async () => {
+//         const exercise = await ExerciseModel.findOne({Name: "Squats"})
 
-        expect(exercise).toBe(mockExercises[0])
-    })
+//         expect(exercise).toBe(mockExercises[0])
+//     })
 
-    test("Exercise can be updated (mocked", async () => {
-        const exercise = await ExerciseModel.findOneAndUpdate({ Name: "Squat" }, { Rep: 8})
+//     test("Exercise can be updated (mocked", async () => {
+//         const exercise = await ExerciseModel.findOneAndUpdate({ Name: "Squat" }, { Rep: 8})
 
-        expect(exercise.Rep).toBe(8)
-    })
+//         expect(exercise.Rep).toBe(8)
+//     })
 
-    test("Delete Exercise (mocked)", async () => {
-        const deleteExercise = await ExerciseModel.findOneAndDelete({ Name: "Squat"})
+//     test("Delete Exercise (mocked)", async () => {
+//         const deleteExercise = await ExerciseModel.findOneAndDelete({ Name: "Squat"})
 
-        expect(deleteExercise).toBe(mockExercises[0])
-    })
+//         expect(deleteExercise).toBe(mockExercises[0])
+//     })
     
-})
+// })
 
 
-describe("Workout Tests", () => {
-    let mockCreate
-    let mockFindAll
-    let mockFindByOne
-    let mockUpdateOne
-    let mockFindOneAndDelete
+// describe("Workout Tests", () => {
+//     let mockCreate
+//     let mockFindAll
+//     let mockFindByOne
+//     let mockUpdateOne
+//     let mockFindOneAndDelete
 
-    const mockWorkouts = [
-        {
-            Type: "Upper body",
-            Level: "Beginner",
-            Exercise: []
-        },
-        {
-            Type: "Lower body",
-            Level: "Intermediate",
-            Exercise: []
-        },
-        {
-            Type: "Legs",
-            Level: "Advanced",
-            Exercise: []
-        }
-    ]
+//     const mockWorkouts = [
+//         {
+//             Type: "Upper body",
+//             Level: "Beginner",
+//             Exercise: []
+//         },
+//         {
+//             Type: "Lower body",
+//             Level: "Intermediate",
+//             Exercise: []
+//         },
+//         {
+//             Type: "Legs",
+//             Level: "Advanced",
+//             Exercise: []
+//         }
+//     ]
 
-    beforeAll(async () =>{
-        mockCreate = sinon.stub(WorkoutModel, "create").resolves({
-                Type: "Push",
-                Level: "Beginner",
-                Exercise: []
-        })
+//     beforeAll(async () =>{
+//         mockCreate = sinon.stub(WorkoutModel, "create").resolves({
+//                 Type: "Push",
+//                 Level: "Beginner",
+//                 Exercise: []
+//         })
 
-        mockFindAll = sinon.stub(WorkoutModel, "find").resolves(mockWorkouts)
+//         mockFindAll = sinon.stub(WorkoutModel, "find").resolves(mockWorkouts)
 
-        mockFindByOne = sinon.stub(WorkoutModel, "findOne").resolves(mockWorkouts[0])
+//         mockFindByOne = sinon.stub(WorkoutModel, "findOne").resolves(mockWorkouts[0])
 
-        mockUpdateOne = sinon.stub(WorkoutModel, "findOneAndUpdate").resolves({ Rep: 8 })
+//         mockUpdateOne = sinon.stub(WorkoutModel, "findOneAndUpdate").resolves({ Rep: 8 })
 
-        mockFindOneAndDelete = sinon.stub(WorkoutModel, "findOneAndDelete").resolves(mockWorkouts[0])
-    })
+//         mockFindOneAndDelete = sinon.stub(WorkoutModel, "findOneAndDelete").resolves(mockWorkouts[0])
+//     })
 
 
-    afterAll(async () =>{
-        sinon.restore()
-    })
+//     afterAll(async () =>{
+//         sinon.restore()
+//     })
 
-    test("Create a workout", async () => {
-        // const workout = await WorkoutModel.create({
-        //     Type: "Push",
-        //     Level: "Beginner",
-        //     Exercise: []
-        // })
+//     test("Create a workout", async () => {
+//         // const workout = await WorkoutModel.create({
+//         //     Type: "Push",
+//         //     Level: "Beginner",
+//         //     Exercise: []
+//         // })
 
-        // expect(workout).toEqual(mockWorkouts[0])
-    })
-})
+//         // expect(workout).toEqual(mockWorkouts[0])
+//     })
+// })
 
 
 

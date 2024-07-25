@@ -7,7 +7,7 @@ const WorkoutSchema = new mongoose.Schema({
     Level: {
         type: String
     },
-    Focus_Area:{
+    "Focus_Area":{
         type: String
     },
     ExerciseIds: [{
