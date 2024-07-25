@@ -1,108 +1,177 @@
-const { beforeAll, describe, test, expect } = require("@jest/globals")
-const UserModel = require("../models/User.js")
+
 const mongoose = require("mongoose")
 const { config } = require("dotenv")
-const sinon = require("sinon")
+const { beforeAll, describe, test, expect } = require("@jest/globals")
+const UserModel = require("../models/User.js")
 const ExerciseModel  = require("../models/Exercise.js")
 const WorkoutModel  = require("../models/Workout.js")
+const sinon = require("sinon")
+const { MongoMemoryServer } = require("mongodb-memory-server")
 
 
-describe("User tests", () => {
-    let mockCreate, mockFindAll, mockFindById, mockUpdateOne, mockFindOne;
 
-    const workoutId = new mongoose.Types.ObjectId("66a1e41f2bd4779d9904b13d");
+// describe("User tests", () => {
+//     let mockCreate, mockFindAll, mockFindById, mockUpdateOne, mockFindOne;
+
+//     const workoutId = new mongoose.Types.ObjectId("66a1e41f2bd4779d9904b13d");
     
-    const userId1 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef18");
-    const userId2 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef19");
-    const userId3 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef20");
+//     const userId1 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef18");
+//     const userId2 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef19");
+//     const userId3 = new mongoose.Types.ObjectId("66a09718935504a7c4b4ef20");
 
 
 
-    const mockWorkouts = [
-        { _id: workoutId, Type: "Upper Body", Level: "Beginner", FocusArea: "Chest", ExerciseIds: [1] }
-    ];
+//     const mockWorkouts = [
+//         { _id: workoutId}
+//     ];
 
-    const mockUsers = [
-        {
-            _id: userId1,
-            Of_Id: "1",
-            Nickname: "Phil",
-            Email: "Phil@test.com",
-            WorkoutIds: []
-        },
-        {
-            _id: userId2,
-            Of_Id: "2",
-            Nickname: "Bob",
-            Email: "Bob@test.com",
-            WorkoutIds: [workoutId]
-        },
-        {
-            _id: userId3,
-            Of_Id: "3",
-            Nickname: "Lily",
-            Email: "Lily@test.com",
-            WorkoutIds: []
-        }
-    ];
+//     const mockUsers = [
+//         {
+//             _id: userId1,
+//             Of_Id: "1",
+//             Nickname: "Phil",
+//             Email: "Phil@test.com",
+//             WorkoutIds: []
+//         },
+//         {
+//             _id: userId2,
+//             Of_Id: "2",
+//             Nickname: "Bob",
+//             Email: "Bob@test.com",
+//             WorkoutIds: [workoutId]
+//         },
+//         {
+//             _id: userId3,
+//             Of_Id: "3",
+//             Nickname: "Lily",
+//             Email: "Lily@test.com",
+//             WorkoutIds: []
+//         }
+//     ];
+
+//     beforeAll(async () => {
+//         mockCreate = sinon.stub(UserModel, "create").resolves(new UserModel(mockUsers[2]));
+//         mockFindAll = sinon.stub(UserModel, "find").resolves(mockUsers.map(user => new UserModel(user)));
+//         mockFindById = sinon.stub(UserModel, "findById").resolves(new UserModel(mockUsers[0]));
+//         mockUpdateOne = sinon.stub(UserModel, "findByIdAndUpdate").resolves(new UserModel({ _id: userId1, Nickname: "Phillip" }));        mockFindOne = sinon.stub(UserModel, "findOne").resolves(new UserModel(mockUsers[0]));
+
+//         sinon.stub(mongoose.Model.prototype, "populate").callsFake(function () {
+//             this.WorkoutIds = mockWorkouts;
+//             console.log(this)
+//             return Promise.resolve(this);
+//         });
+
+//     });
+
+//     afterAll(async () => {
+//         sinon.restore();
+//     });
+
+//     test("Create a new user (mocked)", async () =>{
+//         const newUser = {
+//             "_id": userId3,
+//             "Of_Id": "3",
+//             "Nickname": "Lily",
+//             "Email": "Lily@test.com",
+//             "WorkoutIds": []
+//         }
+
+//         const user = await UserModel.create(newUser)
+
+//         expect(user.toObject()).toEqual(mockUsers[2])
+//     })
+
+//     test("Find user by Id (mocked)", async () => {
+//         const user = await UserModel.findById(userId1)
+
+//         expect(user.toObject()).toEqual(mockUsers[0])
+//     })
+
+//     test("Find all users (mocked)", async () => {
+//         const users = await UserModel.find()
+
+//         expect(users.map(user => user.toObject())).toEqual(mockUsers)
+//     })
+
+//     test("User info can be updated (mocked)", async () => {
+//         const user = await UserModel.findByIdAndUpdate(userId1, { Name: "Phillip" })
+
+//         console.log(user) 
+//         expect(user.Nickname).toBe("Phillip")
+//     })
+
+//     test("User can add exercises to workout", async () => {
+//         const user = await UserModel.findOne({ _id: userId1 });
+//         user.WorkoutIds.push(workoutId);
+//         const populatedUser = await user.populate("WorkoutIds");
+    
+//         // Ensure the populatedUser.WorkoutIds is correctly populated
+//         expect(populatedUser.WorkoutIds[0]._id.toString()).toEqual(workoutId.toString());
+//         expect(populatedUser.WorkoutIds[0].Type).toEqual(mockWorkouts[0].Type);
+//         expect(populatedUser.WorkoutIds[0].Level).toEqual(mockWorkouts[0].Level);
+//         expect(populatedUser.WorkoutIds[0].FocusArea).toEqual(mockWorkouts[0].FocusArea);
+//         expect(populatedUser.WorkoutIds[0].ExerciseIds).toEqual(mockWorkouts[0].ExerciseIds);
+//     });
+// });
+
+
+describe("User tests with real populate", () => {
+    let mongoServer;
+    
+    const userId1 = new mongoose.Types.ObjectId("66a1f9f52ed51393b271b6ec");
+    const workoutId = new mongoose.Types.ObjectId("66a1fa3fc7fee0b648b130e6");
+    const exerciseId = new mongoose.Types.ObjectId("66a1fa66b4a39263cf3ef380");
+
+    const mockUser = {
+        _id: userId1,
+        Of_Id: "1",
+        Nickname: "Phil",
+        Email: "Phil@test.com",
+        WorkoutIds: []
+    };
+
+    const mockWorkout = {
+        _id: workoutId,
+        Type: "Upper Body",
+        Level: "Beginner",
+        FocusArea: "Chest",
+        ExerciseIds: [exerciseId]
+    };
 
     beforeAll(async () => {
-        mockCreate = sinon.stub(UserModel, "create").resolves(new UserModel(mockUsers[2]));
-        mockFindAll = sinon.stub(UserModel, "find").resolves(mockUsers.map(user => new UserModel(user)));
-        mockFindById = sinon.stub(UserModel, "findById").resolves(new UserModel(mockUsers[0]));
-        mockUpdateOne = sinon.stub(UserModel, "findByIdAndUpdate").resolves(new UserModel({ _id: userId1, Nickname: "Phillip" }));        mockFindOne = sinon.stub(UserModel, "findOne").resolves(new UserModel(mockUsers[0]));
+        jest.setTimeout(20000); // 20 seconds
+        mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
 
-        sinon.stub(mongoose.Model.prototype, "populate").callsFake(function () {
-            this.WorkoutIds = mockWorkouts;
-            return Promise.resolve(this);
-        });
-
+        await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        
+        // Insert test data
+        await UserModel.create(mockUser);
+        await WorkoutModel.create(mockWorkout);
     });
 
     afterAll(async () => {
-        sinon.restore();
+        await mongoose.connection.dropDatabase();
+        await mongoose.connection.close();
+        await mongoServer.stop();
     });
 
-    test("Create a new user (mocked)", async () =>{
-        const newUser = {
-            "_id": userId3,
-            "Of_Id": "3",
-            "Nickname": "Lily",
-            "Email": "Lily@test.com",
-            "WorkoutIds": []
-        }
-
-        const user = await UserModel.create(newUser)
-
-        expect(user.toObject()).toEqual(mockUsers[2])
-    })
-
-    test("Find user by Id (mocked)", async () => {
-        const user = await UserModel.findById(userId1)
-
-        expect(user.toObject()).toEqual(mockUsers[0])
-    })
-
-    test("Find all users (mocked)", async () => {
-        const users = await UserModel.find()
-
-        expect(users.map(user => user.toObject())).toEqual(mockUsers)
-    })
-
-    test("User info can be updated (mocked)", async () => {
-        const user = await UserModel.findByIdAndUpdate(userId1, { Name: "Phillip" })
-
-        console.log(user) 
-        expect(user.Nickname).toBe("Phillip")
-    })
-
     test("User can add exercises to workout", async () => {
+        // Find the user and add a workout ID
         const user = await UserModel.findOne({ _id: userId1 });
         user.WorkoutIds.push(workoutId);
-        const populatedUser = await user.populate("WorkoutIds");
+        await user.save();
 
+        // Populate the user's workouts
+        const populatedUser = await UserModel.findOne({ _id: userId1 }).populate("WorkoutIds");
+
+        console.log(JSON.stringify(populatedUser, null, 2))
         // Ensure the populatedUser.WorkoutIds is correctly populated
         expect(populatedUser.WorkoutIds[0]._id.toString()).toEqual(workoutId.toString());
+        expect(populatedUser.WorkoutIds[0].Type).toEqual(mockWorkout.Type);
+        expect(populatedUser.WorkoutIds[0].Level).toEqual(mockWorkout.Level);
+        expect(populatedUser.WorkoutIds[0].FocusArea).toEqual(mockWorkout.FocusArea);
+        expect(populatedUser.WorkoutIds[0].ExerciseIds).toEqual(mockWorkout.ExerciseIds);
     });
 });
 
