@@ -33,7 +33,7 @@ describe("User tests with real populate", () => {
 
     beforeAll(async () => {
         // server was timing, added set time out to extend the wait to 20 seconds
-        jest.setTimeout(20000); // 20 seconds
+        // jest.setTimeout(20000); // 20 seconds
         //Creates new instance of "MongoMemoryServer" and starts it
         mongoServer = await MongoMemoryServer.create();
         const uri = mongoServer.getUri();
@@ -60,7 +60,8 @@ describe("User tests with real populate", () => {
             WorkoutIds: []
         })
 
-        // console.log(JSON.stringify(user, null, 2))
+        expect(user).toBeInstanceOf(UserModel)
+        expect(user.Of_Id).toBe(mockUser.Of_Id)
         expect(user.Nickname).toBe(mockUser.Nickname)
         expect(user.Email).toBe(mockUser.Email)
     })
@@ -68,24 +69,26 @@ describe("User tests with real populate", () => {
     test("Find user by Id", async () => {
         const user = await UserModel.findById(userId1)
 
+
+        expect(user._id.toString()).toBe(mockUser._id.toString())
         expect(user.Nickname).toBe(mockUser.Nickname)
         expect(user.Of_Id).toBe(mockUser.Of_Id)
     })
 
-    test("Fine all users", async () => {
+    test("Find all users", async () => {
         const users = await UserModel.find()
 
-        // console.log(JSON.stringify(users, null, 2))
         expect(users.length).toBe(2)
     })
 
     test("User info can be updated", async () => {
-        const userUpdate = await UserModel.findByIdAndUpdate(userId1, { Nickname: "Phillip" })
+        const user = await UserModel.findByIdAndUpdate(userId1, { Nickname: "Phillip" })
         const updatedUser = await UserModel.findById(userId1)
-        
-        // console.log(JSON.stringify(userUpdate, null, 2))
-        // console.log(JSON.stringify(updatedUser, null, 2))         
-        expect(userUpdate._id.toString()).toBe(updatedUser._id.toString())
+
+        expect(updatedUser._id.toString()).toBe(user._id.toString())
+        expect(updatedUser.Of_Id ).toBe(user.Of_Id)
+        expect(user.Nickname).not.toBe("Phillip")
+        expect(updatedUser.Nickname).toBe("Phillip")
     })
 
     test("User can add exercises to workout", async () => {
@@ -97,7 +100,6 @@ describe("User tests with real populate", () => {
         // Populate the user's workouts
         const populatedUser = await UserModel.findOne({ _id: userId1 }).populate("WorkoutIds");
 
-        // console.log(JSON.stringify(populatedUser, null, 2))
         // Ensure the populatedUser.WorkoutIds is correctly populated
         expect(populatedUser.WorkoutIds[0]._id.toString()).toEqual(workoutId.toString());
         expect(populatedUser.WorkoutIds[0].Type).toBe(mockWorkout.Type);
@@ -105,6 +107,44 @@ describe("User tests with real populate", () => {
         expect(populatedUser.WorkoutIds[0].Focus_Area).toBe(mockWorkout.Focus_Area);
         expect(populatedUser.WorkoutIds[0].ExerciseIds).toEqual(mockWorkout.ExerciseIds); 
     });
+
+    test("can get all users workouts", async () => {
+        const workout1 = await WorkoutModel.create({
+                Type: "Body Building",
+                Level: "Beginner",
+                Focus_Area: "Upper Body",
+                ExerciseIds: []
+            })
+
+        const workout2 = await WorkoutModel.create({
+                Type: "Strength Training",
+                Level: "Intermediate",
+                Focus_Area: "Lower Body",
+                ExerciseIds: []
+            })
+
+        const workout3 = await WorkoutModel.create({
+                Type: "Body Building",
+                Level: "Advance",
+                Focus_Area: "Upper Body",
+                ExerciseIds: []
+        })
+
+        const user = await UserModel.findById(userId1)
+        user.WorkoutIds.push(workout1)
+        user.WorkoutIds.push(workout2)
+        user.WorkoutIds.push(workout3)
+
+        const populatedUser = await user.populate("WorkoutIds")
+
+        console.log(populatedUser)
+
+        expect(populatedUser.WorkoutIds[0]).toBeInstanceOf(WorkoutModel)
+        expect(populatedUser.WorkoutIds.length).toEqual(4)
+        expect(populatedUser.WorkoutIds[1].Type).toBe("Body Building")
+        expect(populatedUser.WorkoutIds[2].Type).toBe("Strength Training")
+        expect(populatedUser.WorkoutIds[3].Type).toBe("Body Building")
+    })
 });
 
 
@@ -197,8 +237,6 @@ describe("Workout Test with real populate", () => {
         workout.ExerciseIds.push(exercise)
         await workout.save()
 
-        console.log(workout)
-
         expect(exercise).toBeInstanceOf(ExerciseModel)
         expect(workout.ExerciseIds[0].Name).toBe(mockExercise.Name)
         expect(workout.ExerciseIds[0].Rep).toEqual(mockExercise.Rep)
@@ -209,63 +247,79 @@ describe("Workout Test with real populate", () => {
 
 
 
-// describe("Workout Tests", () => {
-//     let mockCreate
-//     let mockFindAll
-//     let mockFindByOne
-//     let mockUpdateOne
-//     let mockFindOneAndDelete
+describe("Exercise Test", () => {
+    let mongoServer;
+    
 
-//     const mockWorkouts = [
-//         {
-//             Type: "Upper body",
-//             Level: "Beginner",
-//             Exercise: []
-//         },
-//         {
-//             Type: "Lower body",
-//             Level: "Intermediate",
-//             Exercise: []
-//         },
-//         {
-//             Type: "Legs",
-//             Level: "Advanced",
-//             Exercise: []
-//         }
-//     ]
+    const exerciseId = new mongoose.Types.ObjectId('66a3bc5d6197b7b7b08013f3');
 
-//     beforeAll(async () =>{
-//         mockCreate = sinon.stub(WorkoutModel, "create").resolves({
-//                 Type: "Push",
-//                 Level: "Beginner",
-//                 Exercise: []
-//         })
+    const mockExercise = {
+        _id: exerciseId,
+        Name:"Push Up",
+        Rep: 10,
+        Set: 8
+    }
 
-//         mockFindAll = sinon.stub(WorkoutModel, "find").resolves(mockWorkouts)
+    beforeAll(async () => {
+        // server was timing, added set time out to extend the wait to 20 seconds
+        jest.setTimeout(20000); // 20 seconds
+        //Creates new instance of "MongoMemoryServer" and starts it
+        mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
 
-//         mockFindByOne = sinon.stub(WorkoutModel, "findOne").resolves(mockWorkouts[0])
+        await mongoose.connect(uri);
+        
+        // Insert test data
+        const exercise = await ExerciseModel.create(mockExercise); 
+    });
 
-//         mockUpdateOne = sinon.stub(WorkoutModel, "findOneAndUpdate").resolves({ Rep: 8 })
+    afterAll(async () => {
+        await mongoose.connection.dropDatabase();
+        await mongoose.connection.close();
+        // Stops the server
+        await mongoServer.stop();
+    });
 
-//         mockFindOneAndDelete = sinon.stub(WorkoutModel, "findOneAndDelete").resolves(mockWorkouts[0])
-//     })
+    test("Create an exercise", async () => {
+        const exercise = await ExerciseModel.create({
+            Name: "Push Up",
+            Rep: 10,
+            Set: 8
+        })
 
+        expect(exercise).toBeInstanceOf(ExerciseModel)
+        expect(exercise.Name).toBe(mockExercise.Name)
+        expect(exercise.Rep).toEqual(mockExercise.Rep)
+        expect(exercise.Set).toEqual(mockExercise.Set)
 
-//     afterAll(async () =>{
-//         sinon.restore()
-//     })
+    })
 
-//     test("Create a workout", async () => {
-//         // const workout = await WorkoutModel.create({
-//         //     Type: "Push",
-//         //     Level: "Beginner",
-//         //     Exercise: []
-//         // })
+    test("Find exercise by Id", async () => {
+        const exercise = await ExerciseModel.findById('66a3bc5d6197b7b7b08013f3')
 
-//         // expect(workout).toEqual(mockWorkouts[0])
-//     })
-// })
+        expect(exercise.Name).toBe(mockExercise.Name)
+        expect(exercise.Rep).toEqual(mockExercise.Rep)
+        expect(exercise.Set).toEqual(mockExercise.Set)
+    })
 
+    test("Exercise info can be updated", async () => {
+        const exercise = await ExerciseModel.findByIdAndUpdate(exerciseId, {Name: "Pull Up"})
+        const updateExercise = await ExerciseModel.findById(exerciseId)
+
+        expect(exercise._id.toString()).toBe(updateExercise._id.toString())
+        expect(updateExercise.Name).toBe("Pull Up")
+        expect(exercise.Rep).toEqual(updateExercise.Rep)
+        expect(exercise.Set).toEqual(updateExercise.Set)
+    })
+
+    test("Exercise can be deleted", async () => {
+        const exercise = await ExerciseModel.findByIdAndDelete(exerciseId)
+        const deletedExercise = await ExerciseModel.findById(exerciseId)
+
+        expect(deletedExercise).toBeNull() 
+    })
+
+})
 
 
 
