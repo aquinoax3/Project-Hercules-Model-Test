@@ -38,7 +38,7 @@ describe("User tests with real populate", () => {
         mongoServer = await MongoMemoryServer.create();
         const uri = mongoServer.getUri();
 
-        await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        await mongoose.connect(uri);
         
         // Insert test data
         await UserModel.create(mockUser);
@@ -108,89 +108,105 @@ describe("User tests with real populate", () => {
 });
 
 
-// describe("Exercise Test", () => {
-//     let mockCreate
-//     let mockFindAll
-//     let mockFindByOne
-//     let mockUpdateOne
-//     let mockFindOneAndDelete
+describe("Workout Test with real populate", () => {
+    let mongoServer;
     
-//     const mockExercises = [
-//         {
-//             Name: "Squats",
-//             Rep: 10,
-//             Set: 3
-//         },
-//         {
-//             Name: "Pull Up",
-//             Rep: 8,
-//             Set: 3
-//         },
-//         {
-//             Name: "Chest Press",
-//             Rep: 10,
-//             Set: 3
-//         },
-//     ]
+    const userId1 = new mongoose.Types.ObjectId("66a1f9f52ed51393b271b6ec");
+    const workoutId = new mongoose.Types.ObjectId('66a3260509dc6dfe77a823ae');
+    const exerciseId = new mongoose.Types.ObjectId('66a3393bcd9204f6a0712cfd');
 
+    const mockUser = {
+        _id: userId1,
+        Of_Id: "1",
+        Nickname: "Phil",
+        Email: "Phil@test.com",
+        WorkoutIds: []
+    };
 
+    const mockWorkout = {
+        _id: workoutId,
+        Type: "Upper Body",
+        Level: "Beginner",
+        Focus_Area: "Chest",
+        ExerciseIds: [exerciseId]
+    };
 
-//     beforeAll(async () =>{
-//         mockCreate = sinon.stub(ExerciseModel, "create").resolves({
-//                 Name: "Squats",
-//                 Rep: 10,
-//                 Set: 3
-//         })
+    const mockExercise = {
+        Name: 'Push ups',
+        Rep: 8,
+        Set: 3,
+    }
 
-//         mockFindAll = sinon.stub(ExerciseModel, "find").resolves(mockExercises)
+    beforeAll(async () => {
+        // server was timing, added set time out to extend the wait to 20 seconds
+        jest.setTimeout(20000); // 20 seconds
+        //Creates new instance of "MongoMemoryServer" and starts it
+        mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
 
-//         mockFindByOne = sinon.stub(ExerciseModel, "findOne").resolves(mockExercises[0])
+        await mongoose.connect(uri);
+        
+        // Insert test data
+        await UserModel.create(mockUser);
+        await WorkoutModel.create(mockWorkout);
+    });
 
-//         mockUpdateOne = sinon.stub(ExerciseModel, "findOneAndUpdate").resolves({ Rep: 8 })
+    afterAll(async () => {
+        await mongoose.connection.dropDatabase();
+        await mongoose.connection.close();
+        // Stops the server
+        await mongoServer.stop();
+    });
 
-//         mockFindOneAndDelete = sinon.stub(ExerciseModel, "findOneAndDelete").resolves(mockExercises[0])
-//     })
+    test("Create a new workout", async () => {
+        const workout = await WorkoutModel.create({
+            Type: "Upper Body",
+            Level: "Beginner",
+            Focus_Area: "Chest",
+            ExerciseIds: [exerciseId]
+        })
 
+        expect(workout).toBeInstanceOf(WorkoutModel)
+        expect(workout.Type).toBe(mockWorkout.Type)
+        expect(workout.Level).toBe(mockWorkout.Level)
+        expect(workout.Focus_Area).toBe(mockWorkout.Focus_Area)
+    })
 
-//     afterAll(async () =>{
-//         sinon.restore()
-//     })
+    test("Find workout by Id", async () => {
+        const workout = await WorkoutModel.findById(workoutId)
 
-//     test("Create a new exercise (mocked)", async () => {
-//         const createdExercise = await ExerciseModel.create({
-//             Name: "Squats",
-//             Rep: 10,
-//             Set: 3
-//         })
+        expect(workout.Type).toBe(mockWorkout.Type)
+    })
 
-//         expect(createdExercise).toEqual(mockExercises[0])
-//     })
+    test("Find all workouts", async () => {
+        const workouts = await WorkoutModel.find()
 
-//     test("Find all exercises (mocked)", async () => {
-//         const exercises = await ExerciseModel.find()
+        expect(workouts.length).toEqual(2) 
+    })
 
-//         expect(exercises).toEqual(mockExercises)
-//     })
+    test("Exercise can be added to workout", async () => {
+        const workout = await WorkoutModel.findById(workoutId)
+        .populate("ExerciseIds")
 
-//     test("Find exercise (mocked)", async () => {
-//         const exercise = await ExerciseModel.findOne({Name: "Squats"})
+        const exercise = await ExerciseModel.create({
+            Name: "Push ups",
+            Rep: 8,
+            Set: 3
+        })
 
-//         expect(exercise).toBe(mockExercises[0])
-//     })
+        workout.ExerciseIds.push(exercise)
+        await workout.save()
 
-//     test("Exercise can be updated (mocked", async () => {
-//         const exercise = await ExerciseModel.findOneAndUpdate({ Name: "Squat" }, { Rep: 8})
+        console.log(workout)
 
-//         expect(exercise.Rep).toBe(8)
-//     })
+        expect(exercise).toBeInstanceOf(ExerciseModel)
+        expect(workout.ExerciseIds[0].Name).toBe(mockExercise.Name)
+        expect(workout.ExerciseIds[0].Rep).toEqual(mockExercise.Rep)
+        expect(workout.ExerciseIds[0].Set).toEqual(mockExercise.Set)
 
-//     test("Delete Exercise (mocked)", async () => {
-//         const deleteExercise = await ExerciseModel.findOneAndDelete({ Name: "Squat"})
+    })
+})
 
-//         expect(deleteExercise).toBe(mockExercises[0])
-//     })
-    
-// })
 
 
 // describe("Workout Tests", () => {
