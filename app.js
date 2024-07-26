@@ -9,6 +9,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended: true }));
 app.use("/api", UserRouter);
 
+// Routes
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
